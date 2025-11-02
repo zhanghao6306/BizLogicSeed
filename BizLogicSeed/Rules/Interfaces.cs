@@ -36,18 +36,27 @@ public sealed class DiscountEngine
         // 封顶：factor 不得小于 _capFactor
         if (factor < _capFactor) factor = _capFactor;
 
-        // GiftCard 不参与折扣：将 GiftCard 小计加回去（近似处理：先对总额打折，再加回 GiftCard 的折扣差额）
-        var giftCardTotal = order.Items.Where(i => i.Category == Category.GiftCard)
-                                       .Select(i => i.Subtotal)
-                                       .Aggregate(new Money(0, order.Currency), (acc, x) => acc.Add(x));
-        var discounted = new Money(order.Total.Amount * factor, order.Currency);
-        var withoutGiftCardDiscount = new Money(discounted.Amount + giftCardTotal.Amount * (1 - factor), order.Currency);
+        // GiftCard 不参与折扣：计算非 GiftCard 商品的总价并应用折扣，然后加上 GiftCard 商品的总价
+        var nonGiftCardItems = order.Items.Where(i => i.Category != Category.GiftCard);
+        var giftCardItems = order.Items.Where(i => i.Category == Category.GiftCard);
+
+        // 计算非 GiftCard 商品的总价并应用折扣
+        var nonGiftCardTotal = nonGiftCardItems.Select(i => i.Subtotal)
+                                               .Aggregate(new Money(0, order.Currency), (acc, x) => acc.Add(x));
+        var discountedNonGiftCard = nonGiftCardTotal.Multiply(factor);
+
+        // 计算 GiftCard 商品的总价
+        var giftCardTotal = giftCardItems.Select(i => i.Subtotal)
+                                         .Aggregate(new Money(0, order.Currency), (acc, x) => acc.Add(x));
+
+        // 计算最终总价
+        var finalTotal = discountedNonGiftCard.Add(giftCardTotal);
 
         // 最低价保护：不得低于成本的 90%
         var minAllowed = new Money(order.TotalCost.Amount * 0.90m, order.Currency);
-        if (withoutGiftCardDiscount.Amount < minAllowed.Amount)
+        if (finalTotal.Amount < minAllowed.Amount)
             return minAllowed;
 
-        return withoutGiftCardDiscount;
+        return finalTotal;
     }
 }
