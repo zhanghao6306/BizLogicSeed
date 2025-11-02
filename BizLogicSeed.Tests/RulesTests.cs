@@ -1,6 +1,5 @@
 using BizLogicSeed.Domain;
 using BizLogicSeed.Rules;
-using FluentAssertions;
 using Xunit;
 
 namespace BizLogicSeed.Tests;
@@ -30,7 +29,8 @@ public class RulesTests
         var discounted = engine.Apply(order);
 
         // 期望：GiftCard 不打折；其余满足 3 件 8 折，再叠加 VIP 95 折；但总折扣不超过 30%（最低 7 折）
-        discounted.Currency.Should().Be("EUR");
-        discounted.Amount.Should().BeInRange(0.70m * order.Total.Amount, order.Total.Amount);
+        Assert.Equal("EUR", discounted.Currency);
+        Assert.InRange(discounted.Amount, 0.70m * order.Total.Amount, order.Total.Amount);
+
     }
 }

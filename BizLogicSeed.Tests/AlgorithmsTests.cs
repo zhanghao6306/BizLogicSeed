@@ -1,6 +1,5 @@
 using BizLogicSeed.Domain;
 using BizLogicSeed.Algorithms;
-using FluentAssertions;
 using Xunit;
 
 namespace BizLogicSeed.Tests;
@@ -18,7 +17,8 @@ public class AlgorithmsTests
         };
         var total = PriceCalculator.TotalWithTax(order);
         // 银行家舍入：12.345 * 1.20 = 14.814 → 14.81（.5 进偶）
-        total.Amount.Should().Be(14.81m);
-        PriceCalculator.Format(total).Should().Contain("€");
+        Assert.Equal(14.81m, total.Amount);
+        Assert.Contains("€", PriceCalculator.Format(total));
+
     }
 }
