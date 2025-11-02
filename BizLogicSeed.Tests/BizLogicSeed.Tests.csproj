@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+ <ImplicitUsings>enable</ImplicitUsings>
+	  <!-- ← 加这一行 -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.7.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BizLogicSeed\BizLogicSeed.csproj" />
+  </ItemGroup>
+</Project>
