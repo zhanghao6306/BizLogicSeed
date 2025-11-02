@@ -1,15 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <Nullable>enable</Nullable>
- <ImplicitUsings>enable</ImplicitUsings>
-	  <!-- ← 加这一行 -->
-  </PropertyGroup>
-  <ItemGroup>
-	  <PackageReference Include="xunit" Version="2.7.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BizLogicSeed\BizLogicSeed.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- 必须有 Test SDK，否则 vstest 宿主解析依赖会异常 -->
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+
+		<!-- xUnit 主包 + VS 运行器 -->
+		<PackageReference Include="xunit" Version="2.7.0" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- 兼容某些旧/特殊运行环境：显式提供 abstractions（不会进入生产发布） -->
+		<PackageReference Include="xunit.abstractions" Version="2.0.3">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\\BizLogicSeed\\BizLogicSeed.csproj" />
+	</ItemGroup>
 </Project>
