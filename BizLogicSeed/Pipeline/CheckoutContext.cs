@@ -9,6 +9,7 @@ public sealed class CheckoutContext
     public bool InventoryReserved { get; set; }
     public bool PaymentCaptured { get; set; }
     public bool InvoiceGenerated { get; set; }
+    public string? InvoiceId { get; set; }
 
     // 模拟外部依赖结果
     public List<string> Log { get; } = new();
