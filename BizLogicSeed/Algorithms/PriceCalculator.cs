@@ -5,7 +5,7 @@ namespace BizLogicSeed.Algorithms;
 
 public static class PriceCalculator
 {
-    private static readonly Dictionary<string, decimal> Tax = new()
+    public static readonly Dictionary<string, decimal> Tax = new()
     {
         ["DE"] = 0.19m,
         ["FR"] = 0.20m,
