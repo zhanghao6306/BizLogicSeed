@@ -59,6 +59,95 @@ dotnet test
 
 ---
 
+# 任务 D：动态定价（节日 / 清仓 / 利润保护）
+
+# 目标：
+实现 DynamicPriceCalculator，在基础定价规则上增加市场状态（normal、holiday、clearance）逻辑，
+并支持最低利润保护，验证智能体的策略推理与多层计算能力。
+
+逻辑要求：
+
+基础价来源于 PriceCalculator.Calculate()。
+
+"normal"：不变；"holiday"：先含税再 9折；"clearance"：税率 0 且 75折。
+
+若折扣后利润率低于 5%，自动调整至 5% 利润。
+
+所有计算过程使用 decimal，并采用 MidpointRounding.ToEven 保留两位小数。
+
+输出结构体：
+
+public record PriceResult(
+    Money FinalPrice,
+    decimal AppliedTaxRate,
+    decimal AppliedDiscount,
+    string StrategyNote
+);
+
+
+**限制**：
+
+仅允许修改 Algorithms 目录，禁止修改 Domain。
+
+保留 PriceCalculator 原有逻辑，不得改动税率或汇率定义。
+
+**验收**：
+
+通过 DynamicPriceCalculatorTests 中的全部测试。
+
+输出结果需包含：税率、折扣、最终价格、策略说明。
+
+验证顺序：加税 → 折扣 → 利润保护 → ToEven。
+
+# 任务 E：综合决策（库存 / 竞品 / 满意度 / 冲突规则）
+
+# 目标：
+实现 DecisionPriceCalculator，在任务 D 的基础价上叠加库存、竞品、满意度决策层，
+并生成结构化报告，验证智能体的多因素推理与冲突处理能力。
+
+逻辑要求：
+
+调用 DynamicPriceCalculator.CalculateDynamicPrice() 获取基础价。
+
+按以下顺序逐层应用：
+
+库存层：库存 <0.3 → +10%；>0.8 → −5%。
+
+竞品层：竞品价 < 当前价 → −2%；> 当前价 → +1%。
+
+满意度层：满意度 <0.6 → −5%；>0.9 → +3%。
+
+若连续两层调整方向相反 → 仅保留幅度较小的一方。
+
+所有金额用 decimal + MidpointRounding.ToEven 保留两位。
+
+输出结构体：
+
+public record DecisionResult(
+    Money FinalPrice,
+    decimal EffectiveTaxRate,
+    decimal TotalAdjustmentPercent,
+    string DecisionSummary,
+    string[] KeyFactors
+);
+
+
+**限制**：
+
+禁止修改 Domain，仅在 Algorithms 目录下扩展。
+
+所有决策逻辑需具备可解释性，不得硬编码假值。
+
+**验收**：
+
+通过 DecisionPriceCalculatorTests 全部测试。
+
+报告中需列出：市场状态、税率、调整比例、主要因子。
+
+验证顺序：基础价 → 库存层 → 竞品层 → 满意度层 → 冲突裁决 → ToEven。
+
+输出需可复现、可追踪、可扩展。
+
 ## 评分建议（供你评 Code 智能体）
 - **上下文理解**：读懂规则/流程/算法的业务含义（1-5）
 - **工具调用**：.NET/集合/异步/取消/日志/测试正确使用（1-5）
