@@ -6,7 +6,7 @@ namespace BizLogicSeed.Tests;
 
 public class RulesTests
 {
-    [Fact(Skip = "实现任务 A 后去掉 Skip")]
+    [Fact]
     public void Discount_Should_Apply_Bulk_And_Vip_With_Cap_And_Exclusion()
     {
         var order = new Order
@@ -30,7 +30,7 @@ public class RulesTests
 
         // 期望：GiftCard 不打折；其余满足 3 件 8 折，再叠加 VIP 95 折；但总折扣不超过 30%（最低 7 折）
         Assert.Equal("EUR", discounted.Currency);
-        Assert.InRange(discounted.Amount, 0.70m * order.Total.Amount, order.Total.Amount);
+        Assert.Equal(202m, discounted.Amount);
 
     }
 }
