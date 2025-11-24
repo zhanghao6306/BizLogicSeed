@@ -6,7 +6,7 @@ namespace BizLogicSeed.Tests;
 
 public class PipelineTests
 {
-    [Fact(Skip = "实现任务 B 后去掉 Skip")]
+    [Fact]
     public async Task Pipeline_Should_Compensate_On_Failure()
     {
         var order = new Order

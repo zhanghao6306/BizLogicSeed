@@ -13,7 +13,7 @@ public sealed class ValidateStockStep : IPipelineStep<CheckoutContext>
         ctx.Log.Add("Stock validated");
         return Task.CompletedTask;
     }
-    public Task CompensateAsync(CheckoutContext ctx, CancellationToken ct) => Task.CompletedTask;
+    public Task CompensateAsync(CheckoutContext ctx) => Task.CompletedTask;
 }
 
 public interface IInventoryService
@@ -44,10 +44,10 @@ public sealed class ReserveInventoryStep : IPipelineStep<CheckoutContext>
         ctx.InventoryReserved = true;
         ctx.Log.Add("Inventory reserved");
     }
-    public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
+    public async Task CompensateAsync(CheckoutContext ctx)
     {
         if (ctx.InventoryReserved)
-            await _svc.ReleaseAsync(ctx.Order, ct);
+            await _svc.ReleaseAsync(ctx.Order, CancellationToken.None);
     }
 }
 
@@ -61,10 +61,10 @@ public sealed class ChargePaymentStep : IPipelineStep<CheckoutContext>
         ctx.PaymentCaptured = true;
         ctx.Log.Add("Payment captured");
     }
-    public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
+    public async Task CompensateAsync(CheckoutContext ctx)
     {
         if (ctx.PaymentCaptured)
-            await _svc.RefundAsync(ctx.Order, ct);
+            await _svc.RefundAsync(ctx.Order, CancellationToken.None);
     }
 }
 
@@ -78,9 +78,9 @@ public sealed class GenerateInvoiceStep : IPipelineStep<CheckoutContext>
         ctx.InvoiceGenerated = true;
         ctx.Log.Add($"Invoice created: {id}");
     }
-    public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
+    public async Task CompensateAsync(CheckoutContext ctx)
     {
         if (ctx.InvoiceGenerated)
-            await _svc.VoidAsync("unknown", ct); // 简化：测试中用 Fake 记录
+            await _svc.VoidAsync("unknown", CancellationToken.None); // 简化：测试中用 Fake 记录
     }
 }

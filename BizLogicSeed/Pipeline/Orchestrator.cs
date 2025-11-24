@@ -31,7 +31,7 @@ public sealed class PipelineOrchestrator<TContext>
             // 逆序补偿
             foreach (var step in executed.AsEnumerable().Reverse())
             {
-                try { await step.CompensateAsync(ctx, ct); compensatedNames.Add(step.GetType().Name); }
+                try { await step.CompensateAsync(ctx); compensatedNames.Add(step.GetType().Name); }
                 catch { /* 记录后继续尝试补偿 */ }
             }
             return new PipelineResult { Success = false, Error = ex, ExecutedSteps = executedNames, CompensatedSteps = compensatedNames };

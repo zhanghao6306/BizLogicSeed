@@ -3,7 +3,7 @@ namespace BizLogicSeed.Pipeline;
 public interface IPipelineStep<TContext>
 {
     Task ExecuteAsync(TContext ctx, CancellationToken ct);
-    Task CompensateAsync(TContext ctx, CancellationToken ct);
+    Task CompensateAsync(TContext ctx);
 }
 
 public sealed class PipelineResult
