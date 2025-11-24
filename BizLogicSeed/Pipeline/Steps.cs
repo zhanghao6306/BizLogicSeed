@@ -10,7 +10,7 @@ public sealed class ValidateStockStep : IPipelineStep<CheckoutContext>
         if (ctx.Order.Items.Any(i => i.Quantity <= 0))
             throw new InvalidOperationException("Invalid quantity");
         ctx.StockValidated = true;
-        ctx.Log.Add("Stock validated");
+        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Execute: ValidateStockStep");
         return Task.CompletedTask;
     }
     public Task CompensateAsync(CheckoutContext ctx, CancellationToken ct) => Task.CompletedTask;
@@ -42,12 +42,15 @@ public sealed class ReserveInventoryStep : IPipelineStep<CheckoutContext>
     {
         await _svc.ReserveAsync(ctx.Order, ct);
         ctx.InventoryReserved = true;
-        ctx.Log.Add("Inventory reserved");
+        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Execute: ReserveInventoryStep");
     }
     public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
     {
         if (ctx.InventoryReserved)
+        {
             await _svc.ReleaseAsync(ctx.Order, ct);
+            ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Compensate: ReserveInventoryStep (Released inventory)");
+        }
     }
 }
 
@@ -57,14 +60,24 @@ public sealed class ChargePaymentStep : IPipelineStep<CheckoutContext>
     public ChargePaymentStep(IPaymentService svc) => _svc = svc;
     public async Task ExecuteAsync(CheckoutContext ctx, CancellationToken ct)
     {
+        // 幂等性：如果已经扣款成功，直接返回
+        if (ctx.PaymentCaptured)
+        {
+            ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Execute: ChargePaymentStep (Already captured, skipping)");
+            return;
+        }
+        
         await _svc.CaptureAsync(ctx.Order, ct);
         ctx.PaymentCaptured = true;
-        ctx.Log.Add("Payment captured");
+        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Execute: ChargePaymentStep");
     }
     public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
     {
         if (ctx.PaymentCaptured)
+        {
             await _svc.RefundAsync(ctx.Order, ct);
+            ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Compensate: ChargePaymentStep (Refunded payment)");
+        }
     }
 }
 
@@ -76,11 +89,15 @@ public sealed class GenerateInvoiceStep : IPipelineStep<CheckoutContext>
     {
         var id = await _svc.CreateAsync(ctx.Order, ct);
         ctx.InvoiceGenerated = true;
-        ctx.Log.Add($"Invoice created: {id}");
+        ctx.InvoiceId = id;
+        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Execute: GenerateInvoiceStep (Invoice ID: {id})");
     }
     public async Task CompensateAsync(CheckoutContext ctx, CancellationToken ct)
     {
-        if (ctx.InvoiceGenerated)
-            await _svc.VoidAsync("unknown", ct); // 简化：测试中用 Fake 记录
+        if (ctx.InvoiceGenerated && ctx.InvoiceId is not null)
+        {
+            await _svc.VoidAsync(ctx.InvoiceId, ct);
+            ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Compensate: GenerateInvoiceStep (Voided invoice: {ctx.InvoiceId})");
+        }
     }
 }
